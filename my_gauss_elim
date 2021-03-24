@@ -1,0 +1,81 @@
+#include "matrix.hpp"
+#include "matrix_utility.hpp"
+
+using namespace std;
+
+
+//switch rows with largest element on top
+template<typename T>
+void rowswitch(matrix<T> &m, int rownumber, int columnnumber) {
+
+     size_t R = m.size().first, C = m.size().second;
+
+        matrix<T> res(R, C);
+        T mnVal = m(rownumber,columnnumber);
+        T mxVal = m(rownumber,columnnumber);
+        for (size_t r = rownumber; r < R; r++) {
+            mnVal = std::min(mnVal, m(r, C));
+            mxVal = std::max(mxVal, m(r, C));
+        }
+        T absVal=std::abs(mnVal) ;
+        T val=std::max(absVal, mxVal);
+        size_t r;
+        for ( r = rownumber; r < R; r++){
+          if(std::abs(m(r,C))==val)break;
+        }
+        T dummy[C];
+        for (size_t c = 0; c < C; c++){
+          dummy[c]=m(rownumber,c);
+        }
+        for (size_t c = 0; c < C; c++){
+          m(rownumber,c)=m(r,c);
+        }
+        for (size_t c = 0; c < C; c++){
+          m(r,c)=dummy[c];
+        }
+        return ;
+}
+
+//subtract a multiple of a row from the row below to create REF
+template<typename T>
+void rowsubtract(matrix<T> &m, int rownumber,int columnnumber){
+  size_t R = m.size().first, C = m.size().second;
+  if(m(rownumber,columnnumber)==0)return;
+  for(int r=1;r<R-rownumber;r++){
+    long double x=(m(rownumber+r,columnnumber)+0.1-0.1)/m(rownumber,columnnumber);
+    m(rownumber+r,columnnumber)=0;
+    for(int c=columnnumber+1; c<C;c++){
+      m(rownumber+r,c)-= x*m(rownumber,c);
+    }
+  }
+  return;
+}
+
+//convert to REF
+template<typename T>
+void REF(matrix<T> &m){
+  size_t R = m.size().first, C = m.size().second;
+  int rownumber=0,columnnumber=0;
+  for(;rownumber<R;rownumber++){
+    columnnumber=0;
+    rowswitch(m, rownumber, columnnumber);
+    rowsubtract(m,rownumber,columnnumber);
+    if(m(rownumber,columnnumber)==0){
+      columnnumber++;
+      while(m(rownumber,columnnumber-1)==0&&columnnumber<C){
+        rowswitch(m, rownumber, columnnumber);
+        rowsubtract(m,rownumber,columnnumber);
+        if(m(rownumber,columnnumber)==0)columnnumber++;
+      }
+    }
+  rownumber++;
+  }
+}
+
+int main(){
+  matrix<double> D = {{65, 77, 69, 75, 69},
+                        {61, 74, 70, 66, 68},
+                        {81, 80, 71, 74, 79}};
+  rowswitch(D,0,0);
+  cout<<D;
+}
